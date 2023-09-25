@@ -6,13 +6,14 @@ import { Repository } from 'typeorm'
 import * as bcrypt from 'bcrypt'
 import { LoginUserDto } from './dto/login-user.dto'
 import { JwtService } from '@nestjs/jwt'
-import { jwtConstants } from './constants'
+import { ConfigService } from '@nestjs/config'
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private configService: ConfigService
   ) {}
 
   async register(registerDto: RegisterUserDto) {
@@ -48,11 +49,37 @@ export class AuthService {
     return { access_token, refresh_token }
   }
 
+  async refreshToken(refresh_token: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: {
+          refresh_token
+        }
+      })
+      if (!user) {
+        throw new HttpException('Invalid refresh token', HttpStatus.BAD_REQUEST)
+      }
+
+      const token = await this.generateToken({
+        userId: user.id,
+        email: user.email
+      })
+
+      this.userRepository.update(user.id, { refresh_token: token.refresh_token })
+      return token
+    } catch (error) {
+      throw new HttpException('Invalid refresh token', HttpStatus.BAD_REQUEST)
+    }
+  }
+
   private async generateToken(payload: { userId: number; email: string }) {
-    const access_token = await this.jwtService.signAsync(payload)
+    const access_token = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get('SECRET_ACCESS_TOKEN'),
+      expiresIn: this.configService.get('EXPIRES_IN_ACCESS_TOKEN')
+    })
     const refresh_token = await this.jwtService.signAsync(payload, {
-      secret: jwtConstants.secretPrivate,
-      expiresIn: '7d'
+      secret: this.configService.get('SECRET_REFRESH_TOKEN'),
+      expiresIn: this.configService.get('EXPIRES_IN_REFRESH_TOKEN')
     })
 
     return { access_token, refresh_token }

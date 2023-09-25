@@ -19,4 +19,10 @@ export class AuthController {
     console.log(loginDto)
     return this.authService.login(loginDto)
   }
+
+  @Post('refresh-token')
+  refreshToken(@Body() { refresh_token }: { refresh_token: string }) {
+    console.log(refresh_token)
+    return this.authService.refreshToken(refresh_token)
+  }
 }
