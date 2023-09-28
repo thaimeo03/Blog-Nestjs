@@ -18,7 +18,16 @@ export class AuthService {
 
   async register(registerDto: RegisterUserDto) {
     registerDto.password = await this.hashPassword(registerDto.password)
-    return this.userRepository.save({ ...registerDto, refresh_token: '' })
+    const user = await this.userRepository.save(registerDto)
+
+    const { access_token, refresh_token } = await this.generateToken({
+      userId: user.id,
+      email: user.email
+    })
+
+    await this.userRepository.update(user.id, { refresh_token })
+
+    return { access_token, refresh_token }
   }
 
   async login(loginDto: LoginUserDto) {
