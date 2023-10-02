@@ -1,8 +1,10 @@
-import { Controller, Res, Req, Get, Put, Body, UseGuards, Param, ParseIntPipe } from '@nestjs/common'
+import { Controller, Res, Req, Get, Put, Body, UseGuards, Param, ParseIntPipe, Query } from '@nestjs/common'
 import { UserService } from './user.service'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { Response, Request } from 'express'
+import { FilterUserDto } from './dto/filter-user.dto'
+import { PaginateValidationPipe } from 'common/paginateValidation.pipe'
 
 @Controller('users')
 export class UserController {
@@ -10,8 +12,10 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Get()
-  findAll() {
-    return this.userService.findAll()
+  findAll(@Query(new PaginateValidationPipe()) query: FilterUserDto) {
+    console.log(query)
+
+    return this.userService.findAll(query)
   }
 
   @UseGuards(AuthGuard)
