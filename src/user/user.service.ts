@@ -49,4 +49,10 @@ export class UserService {
   async update({ id, updateUserDto }: { id: number; updateUserDto: UpdateUserDto }) {
     await this.userRepository.update(id, updateUserDto)
   }
+
+  async updateAvatar({ id, avatarUrl }: { id: number; avatarUrl: string }) {
+    await this.userRepository.update(id, {
+      avatar: avatarUrl
+    })
+  }
 }

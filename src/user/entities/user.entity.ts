@@ -18,6 +18,9 @@ export class User {
   password: string
 
   @Column({ nullable: true, default: null })
+  avatar: string
+
+  @Column({ nullable: true, default: null })
   refresh_token: string
 
   @Column({ default: 1 })
